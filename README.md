@@ -7,7 +7,7 @@
 ## 安装
 
 1. 在 Clink 打开 **General → Repositories**。
-2. 添加仓库：`MIAONECYAN/clink-rime-ice`。
+2. 添加仓库：`MIAONECYAN/Clink-Rime-Ice`。
 3. 回到 **Languages**，在 Community 中安装这个中文包。
 
 Clink 只接受公开 GitHub Release，并校验 `manifest.json` 中每个文件的大小与 SHA-256。
