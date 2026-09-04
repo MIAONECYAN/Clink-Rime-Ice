@@ -1,0 +1,22 @@
+{
+  "rime-ice": {
+    "repository": "https://github.com/iDvel/rime-ice",
+    "commit": "fbb516b2786e4d5444383706d13c31c2e4d10c08",
+    "used": [
+      "cn_dicts/8105.dict.yaml",
+      "cn_dicts/base.dict.yaml",
+      "cn_dicts/ext.dict.yaml",
+      "cn_dicts/others.dict.yaml",
+      "others/emoji-map.txt"
+    ]
+  },
+  "clink-language-packs": {
+    "repository": "https://github.com/anti-ltd/clink-language-packs",
+    "commit": "3a6a666bfff0e85466ea40acdca0137808167b50",
+    "copied_unchanged": [
+      "Lexicons/zh.cngm",
+      "Lexicons/zh.bpevocab",
+      "Lexicons/zh.mlmodelc"
+    ]
+  }
+}
