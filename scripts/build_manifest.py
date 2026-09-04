@@ -8,23 +8,24 @@ import shutil
 import sys
 
 
-if len(sys.argv) != 4:
-    raise SystemExit("usage: build_manifest.py VERSION OWNER/REPO OUTPUT")
+if len(sys.argv) not in (4, 5):
+    raise SystemExit("usage: build_manifest.py VERSION OWNER/REPO OUTPUT [CODE]")
 
-version, repository, output_arg = sys.argv[1:]
+version, repository, output_arg = sys.argv[1:4]
+code = sys.argv[4] if len(sys.argv) == 5 else "zh_cn"
 root = pathlib.Path(__file__).resolve().parents[1]
 lexicons = root / "Lexicons"
 output = pathlib.Path(output_arg)
 assets = output / "assets"
 entries = []
 
-for path in sorted(lexicons.glob("zh.*")):
+for path in sorted(lexicons.glob(code + ".*")):
     files = sorted(path.rglob("*")) if path.is_dir() else [path]
     for source in files:
         if not source.is_file() or source.name.startswith("._") or source.name == ".DS_Store":
             continue
         relative = source.relative_to(lexicons).as_posix()
-        name = "zh--" + relative.replace("/", "--")
+        name = code + "--" + relative.replace("/", "--")
         target = assets / name
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(source, target)
@@ -36,7 +37,7 @@ for path in sorted(lexicons.glob("zh.*")):
             "byteCount": len(data),
         })
 
-manifest = {"version": version, "packs": [{"code": "zh", "version": version, "assets": entries}]}
+manifest = {"version": version, "packs": [{"code": code, "version": version, "assets": entries}]}
 output.mkdir(parents=True, exist_ok=True)
 (output / "manifest.json").write_text(json.dumps(manifest, separators=(",", ":")), encoding="utf-8")
 print(f"staged {len(entries)} assets for {repository} {version}")
