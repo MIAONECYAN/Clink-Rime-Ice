@@ -1,11 +1,6 @@
 name: Build and publish initial language pack
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - ".github/workflows/bootstrap.yml"
   workflow_dispatch:
 
 permissions:
