@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build Clink zh.cime, zh.clex and zh.emoji.json from pinned Rime Ice data."""
+"""Build a Clink Chinese community pack from pinned Rime Ice data."""
 
 from __future__ import annotations
 
@@ -178,17 +178,21 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--rime-ice", type=pathlib.Path, required=True)
     parser.add_argument("--output", type=pathlib.Path, default=pathlib.Path(__file__).resolve().parents[1] / "Lexicons")
+    parser.add_argument("--code", default="zh_cn")
     args = parser.parse_args()
+    if not re.fullmatch(r"[a-z][a-z0-9_-]*", args.code):
+        raise SystemExit("--code must be a lowercase Clink language code")
     args.output.mkdir(parents=True, exist_ok=True)
     entries, sources = load_entries(args.rime_ice)
     report = {
+        "code": args.code,
         "sources": sources,
         "deduplicated_annotated_entries": len(entries),
-        **write_cime(entries, args.output / "zh.cime"),
-        **write_clex(entries, args.output / "zh.clex"),
-        **write_emoji(args.rime_ice, args.output / "zh.emoji.json"),
+        **write_cime(entries, args.output / f"{args.code}.cime"),
+        **write_clex(entries, args.output / f"{args.code}.clex"),
+        **write_emoji(args.rime_ice, args.output / f"{args.code}.emoji.json"),
     }
-    report["bytes"] = {path.name: path.stat().st_size for path in sorted(args.output.glob("zh.*")) if path.is_file()}
+    report["bytes"] = {path.name: path.stat().st_size for path in sorted(args.output.glob(args.code + ".*")) if path.is_file()}
     (args.output.parent / "BUILD_REPORT.json").write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print(json.dumps(report, ensure_ascii=False, indent=2))
 
