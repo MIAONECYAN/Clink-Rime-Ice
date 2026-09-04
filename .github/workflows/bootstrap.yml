@@ -1,11 +1,6 @@
 name: Build and publish initial language pack
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - ".github/workflows/bootstrap.yml"
   workflow_dispatch:
 
 permissions:
@@ -68,10 +63,10 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          git tag -f -a "$VERSION" -m "$VERSION"
-          git push --force origin "$VERSION"
           if gh release view "$VERSION" >/dev/null 2>&1; then
-            gh release upload "$VERSION" --clobber out/manifest.json out/assets/*
-          else
-            gh release create "$VERSION" --title "$VERSION" --generate-notes out/manifest.json out/assets/*
+            echo "Release $VERSION already exists; refusing to replace immutable assets." >&2
+            exit 1
           fi
+          git tag -a "$VERSION" -m "$VERSION"
+          git push origin "$VERSION"
+          gh release create "$VERSION" --title "$VERSION" --generate-notes out/manifest.json out/assets/*
