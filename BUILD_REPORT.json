@@ -1,0 +1,22 @@
+{
+  "sources": {
+    "8105.dict.yaml": 8698,
+    "base.dict.yaml": 543088,
+    "ext.dict.yaml": 339185,
+    "others.dict.yaml": 633
+  },
+  "deduplicated_annotated_entries": 891344,
+  "readings": 788310,
+  "candidate_slots": 887297,
+  "boundary_collisions": 406,
+  "unique_words": 888485,
+  "emoji_glyphs": 1793,
+  "emoji_aliases": 5477,
+  "bytes": {
+    "zh.bpevocab": 277156,
+    "zh.cime": 21393887,
+    "zh.clex": 15418841,
+    "zh.cngm": 360012,
+    "zh.emoji.json": 141207
+  }
+}
