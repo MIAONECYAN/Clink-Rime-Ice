@@ -8,17 +8,19 @@
 
 1. 在 Clink 打开 **General → Repositories**。
 2. 添加仓库：`MIAONECYAN/Clink-Rime-Ice`。
-3. 回到 **Languages**，在 Community 中安装这个中文包。
+3. 回到 **Languages**，选择该仓库并安装“中文（中国大陆）”。
+
+社区包使用 `zh_cn` 作为独立语言代码，因此可以与 Clink 官方的 `zh` 中文包同时存在。如果使用同一个 `zh` 代码，已经安装官方中文的设备会在 **Add language** 中把它隐藏。
 
 Clink 只接受公开 GitHub Release，并校验 `manifest.json` 中每个文件的大小与 SHA-256。
 
 ## 包含内容
 
-- `zh.cime`：雾凇 `8105 + base + ext + others` 的显式拼音词条，按词频排序，每个读音最多 16 个候选。
-- `zh.clex`：同一批词条编译出的 CLEX v1 词典。
-- `zh.emoji.json`：由雾凇手工维护的 Emoji 映射转换。
-- `zh.cngm`：Clink 官方中文下一词模型，原样保留。
-- `zh.bpevocab + zh.mlmodelc`：Clink 官方匹配的中文神经模型与词表，原样保留。
+- `zh_cn.cime`：雾凇 `8105 + base + ext + others` 的显式拼音词条，按词频排序，每个读音最多 16 个候选。
+- `zh_cn.clex`：同一批词条编译出的 CLEX v1 词典。
+- `zh_cn.emoji.json`：由雾凇手工维护的 Emoji 映射转换。
+- `zh_cn.cngm`：Clink 官方中文下一词模型，原样保留，仅改文件前缀以匹配社区语言代码。
+- `zh_cn.bpevocab + zh_cn.mlmodelc`：Clink 官方匹配的中文神经模型与词表，原样保留，仅改文件前缀。
 
 详细来源、固定版本和许可证见 [ATTRIBUTION.md](ATTRIBUTION.md)。
 
