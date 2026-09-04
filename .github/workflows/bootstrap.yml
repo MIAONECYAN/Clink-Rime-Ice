@@ -1,6 +1,11 @@
 name: Build and publish initial language pack
 
 on:
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/bootstrap.yml"
   workflow_dispatch:
 
 permissions:
@@ -15,7 +20,7 @@ jobs:
     if: github.repository == 'MIAONECYAN/Clink-Rime-Ice'
     runs-on: ubuntu-latest
     env:
-      VERSION: v2026.09.05
+      VERSION: v2026.09.05.2
       RIME_ICE_COMMIT: fbb516b2786e4d5444383706d13c31c2e4d10c08
       CLINK_PACKS_COMMIT: 3a6a666bfff0e85466ea40acdca0137808167b50
     steps:
@@ -38,35 +43,61 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p Lexicons
-          cp "$RUNNER_TEMP/clink-language-packs/Lexicons/zh.cngm" Lexicons/
-          cp "$RUNNER_TEMP/clink-language-packs/Lexicons/zh.bpevocab" Lexicons/
-          cp -R "$RUNNER_TEMP/clink-language-packs/Lexicons/zh.mlmodelc" Lexicons/
-          python3 scripts/build.py --rime-ice "$RUNNER_TEMP/rime-ice"
-          python3 scripts/validate.py
+          cp "$RUNNER_TEMP/clink-language-packs/Lexicons/zh.cngm" Lexicons/zh_cn.cngm
+          cp "$RUNNER_TEMP/clink-language-packs/Lexicons/zh.bpevocab" Lexicons/zh_cn.bpevocab
+          cp -R "$RUNNER_TEMP/clink-language-packs/Lexicons/zh.mlmodelc" Lexicons/zh_cn.mlmodelc
+          python3 scripts/build.py --rime-ice "$RUNNER_TEMP/rime-ice" --code zh_cn
+          python3 scripts/validate.py --code zh_cn
 
       - name: Commit reproducible generated assets
         run: |
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add BUILD_REPORT.json Lexicons
+          git add BUILD_REPORT.json Lexicons/zh_cn.*
           if ! git diff --cached --quiet; then
             git commit -m "build: generate Clink Rime Ice language assets"
             git push origin HEAD:main
           fi
 
       - name: Build release manifest
-        run: python3 scripts/build_manifest.py "$VERSION" "$GITHUB_REPOSITORY" out
+        run: python3 scripts/build_manifest.py "$VERSION" "$GITHUB_REPOSITORY" out zh_cn
 
       - name: Publish immutable release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          if gh release view "$VERSION" >/dev/null 2>&1; then
-            echo "Release $VERSION already exists; refusing to replace immutable assets." >&2
-            exit 1
+          if git rev-parse "$VERSION" >/dev/null 2>&1; then
+            test "$(git rev-list -n 1 "$VERSION")" = "$(git rev-parse HEAD)"
+          else
+            git tag -a "$VERSION" -m "$VERSION"
+            git push origin "$VERSION"
           fi
-          git tag -a "$VERSION" -m "$VERSION"
-          git push origin "$VERSION"
-          gh release create "$VERSION" --title "$VERSION" --generate-notes out/manifest.json out/assets/*
+
+          if gh release view "$VERSION" --json isDraft --jq .isDraft >/dev/null 2>&1; then
+            test "$(gh release view "$VERSION" --json isDraft --jq .isDraft)" = true || {
+              echo "Release $VERSION is already public; refusing to replace immutable assets." >&2
+              exit 1
+            }
+          else
+            gh release create "$VERSION" --draft --title "$VERSION" --generate-notes
+          fi
+
+          upload() {
+            local file="$1" attempt=1
+            until gh release upload "$VERSION" "$file" --clobber; do
+              if (( attempt == 8 )); then
+                echo "Upload failed after $attempt attempts: $file" >&2
+                return 1
+              fi
+              sleep $((attempt * 15))
+              ((attempt += 1))
+            done
+          }
+
+          while IFS= read -r -d '' file; do
+            upload "$file"
+          done < <(find out/assets -type f -print0 | sort -z)
+          upload out/manifest.json
+          gh release edit "$VERSION" --draft=false
