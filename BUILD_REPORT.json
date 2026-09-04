@@ -1,4 +1,5 @@
 {
+  "code": "zh_cn",
   "sources": {
     "8105.dict.yaml": 8698,
     "base.dict.yaml": 543088,
@@ -13,10 +14,10 @@
   "emoji_glyphs": 1793,
   "emoji_aliases": 5477,
   "bytes": {
-    "zh.bpevocab": 277156,
-    "zh.cime": 21393887,
-    "zh.clex": 15418841,
-    "zh.cngm": 360012,
-    "zh.emoji.json": 141207
+    "zh_cn.bpevocab": 277156,
+    "zh_cn.cime": 21393887,
+    "zh_cn.clex": 15418841,
+    "zh_cn.cngm": 360012,
+    "zh_cn.emoji.json": 141207
   }
 }
