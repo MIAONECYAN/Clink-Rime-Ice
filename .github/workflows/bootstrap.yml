@@ -1,0 +1,77 @@
+name: Build and publish initial language pack
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/bootstrap.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: bootstrap-language-pack
+  cancel-in-progress: false
+
+jobs:
+  build:
+    if: github.repository == 'MIAONECYAN/Clink-Rime-Ice'
+    runs-on: ubuntu-latest
+    env:
+      VERSION: v2026.09.05
+      RIME_ICE_COMMIT: fbb516b2786e4d5444383706d13c31c2e4d10c08
+      CLINK_PACKS_COMMIT: 3a6a666bfff0e85466ea40acdca0137808167b50
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Fetch pinned upstream sources
+        run: |
+          set -euo pipefail
+          git clone --filter=blob:none https://github.com/iDvel/rime-ice "$RUNNER_TEMP/rime-ice"
+          git -C "$RUNNER_TEMP/rime-ice" checkout "$RIME_ICE_COMMIT"
+          test "$(git -C "$RUNNER_TEMP/rime-ice" rev-parse HEAD)" = "$RIME_ICE_COMMIT"
+
+          git clone --filter=blob:none https://github.com/anti-ltd/clink-language-packs "$RUNNER_TEMP/clink-language-packs"
+          git -C "$RUNNER_TEMP/clink-language-packs" checkout "$CLINK_PACKS_COMMIT"
+          test "$(git -C "$RUNNER_TEMP/clink-language-packs" rev-parse HEAD)" = "$CLINK_PACKS_COMMIT"
+
+      - name: Build Clink assets
+        run: |
+          set -euo pipefail
+          mkdir -p Lexicons
+          cp "$RUNNER_TEMP/clink-language-packs/Lexicons/zh.cngm" Lexicons/
+          cp "$RUNNER_TEMP/clink-language-packs/Lexicons/zh.bpevocab" Lexicons/
+          cp -R "$RUNNER_TEMP/clink-language-packs/Lexicons/zh.mlmodelc" Lexicons/
+          python3 scripts/build.py --rime-ice "$RUNNER_TEMP/rime-ice"
+          python3 scripts/validate.py
+
+      - name: Commit reproducible generated assets
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add BUILD_REPORT.json Lexicons
+          if ! git diff --cached --quiet; then
+            git commit -m "build: generate Clink Rime Ice language assets"
+            git push origin HEAD:main
+          fi
+
+      - name: Build release manifest
+        run: python3 scripts/build_manifest.py "$VERSION" "$GITHUB_REPOSITORY" out
+
+      - name: Publish immutable release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          git tag -f -a "$VERSION" -m "$VERSION"
+          git push --force origin "$VERSION"
+          if gh release view "$VERSION" >/dev/null 2>&1; then
+            gh release upload "$VERSION" --clobber out/manifest.json out/assets/*
+          else
+            gh release create "$VERSION" --title "$VERSION" --generate-notes out/manifest.json out/assets/*
+          fi
