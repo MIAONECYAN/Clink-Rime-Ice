@@ -1,6 +1,9 @@
-name: Build and publish initial language pack
+name: Rebuild and publish language pack
 
 on:
+  push:
+    branches: [main]
+    paths: [source/release-version.txt]
   workflow_dispatch:
 
 permissions:
@@ -15,13 +18,21 @@ jobs:
     if: github.repository == 'MIAONECYAN/Clink-Rime-Ice'
     runs-on: ubuntu-latest
     env:
-      VERSION: v2026.09.05.2
       RIME_ICE_COMMIT: fbb516b2786e4d5444383706d13c31c2e4d10c08
       CLINK_PACKS_COMMIT: 3a6a666bfff0e85466ea40acdca0137808167b50
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: Read immutable release version
+        run: |
+          VERSION="$(cat source/release-version.txt)"
+          [[ "$VERSION" =~ ^v[0-9]+(\.[0-9]+)+$ ]]
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+
+      - name: Test dictionary and prediction binding
+        run: python3 -B -m unittest discover -s tests -v
 
       - name: Fetch pinned upstream sources
         run: |
@@ -38,18 +49,19 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p Lexicons
-          cp "$RUNNER_TEMP/clink-language-packs/Lexicons/zh.cngm" Lexicons/zh_cn.cngm
           cp "$RUNNER_TEMP/clink-language-packs/Lexicons/zh.bpevocab" Lexicons/zh_cn.bpevocab
-          cp -R "$RUNNER_TEMP/clink-language-packs/Lexicons/zh.mlmodelc" Lexicons/zh_cn.mlmodelc
+          mkdir -p Lexicons/zh_cn.mlmodelc
+          cp -R "$RUNNER_TEMP/clink-language-packs/Lexicons/zh.mlmodelc/." Lexicons/zh_cn.mlmodelc/
           python3 scripts/build.py --rime-ice "$RUNNER_TEMP/rime-ice" --code zh_cn
-          python3 scripts/validate.py --code zh_cn
+          python3 scripts/remap_cngm.py --source-lexicons "$RUNNER_TEMP/clink-language-packs/Lexicons"
+          python3 scripts/validate.py --code zh_cn --source-lexicons "$RUNNER_TEMP/clink-language-packs/Lexicons"
 
       - name: Commit reproducible generated assets
         run: |
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add BUILD_REPORT.json Lexicons/zh_cn.*
+          git add BUILD_REPORT.json PREDICTION_REPORT.json Lexicons/zh_cn.*
           if ! git diff --cached --quiet; then
             git commit -m "build: generate Clink Rime Ice language assets"
             git push origin HEAD:main
@@ -76,7 +88,7 @@ jobs:
               exit 1
             }
           else
-            gh release create "$VERSION" --draft --title "$VERSION" --generate-notes
+            gh release create "$VERSION" --draft --title "$VERSION" --notes-file RELEASE_NOTES.md
           fi
 
           upload() {
