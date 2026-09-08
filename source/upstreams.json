@@ -13,8 +13,12 @@
   "clink-language-packs": {
     "repository": "https://github.com/anti-ltd/clink-language-packs",
     "commit": "3a6a666bfff0e85466ea40acdca0137808167b50",
+    "prediction_remap_inputs": [
+      "Lexicons/zh.clex",
+      "Lexicons/zh.cngm"
+    ],
+    "prediction_remap_output": "Lexicons/zh_cn.cngm",
     "copied_unchanged": [
-      "Lexicons/zh.cngm",
       "Lexicons/zh.bpevocab",
       "Lexicons/zh.mlmodelc"
     ]
