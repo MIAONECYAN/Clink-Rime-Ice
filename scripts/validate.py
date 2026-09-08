@@ -7,12 +7,16 @@ import pathlib
 import re
 import struct
 
+from remap_cngm import verify_binding
+
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 LEXICONS = ROOT / "Lexicons"
 parser = argparse.ArgumentParser()
 parser.add_argument("--code", default="zh_cn")
-CODE = parser.parse_args().code
+parser.add_argument("--source-lexicons", type=pathlib.Path)
+args = parser.parse_args()
+CODE = args.code
 errors = []
 
 clex = LEXICONS / f"{CODE}.clex"
@@ -58,6 +62,11 @@ for name in ("metadata.json", "model.mil", "coremldata.bin", "weights/weight.bin
     if not (LEXICONS / f"{CODE}.mlmodelc" / name).is_file():
         errors.append(f"missing Lexicons/{CODE}.mlmodelc/{name}")
 
+try:
+    prediction_pairs = verify_binding(LEXICONS, CODE, ROOT / "PREDICTION_REPORT.json", args.source_lexicons)
+except (OSError, ValueError, struct.error) as error:
+    errors.append(f"invalid prediction binding: {error}")
+
 if errors:
     raise SystemExit("\n".join("ERROR: " + error for error in errors[:100]))
-print(f"valid: {readings:,} readings, {candidates:,} candidate slots")
+print(f"valid: {readings:,} readings, {candidates:,} candidate slots, {prediction_pairs:,} bound prediction pairs")
