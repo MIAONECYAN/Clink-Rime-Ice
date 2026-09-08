@@ -18,6 +18,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Test prediction mapping
+        run: python3 -B -m unittest discover -s tests -v
       - name: Validate assets
         run: python3 scripts/validate.py
       - name: Build manifest
@@ -30,4 +32,7 @@ jobs:
         run: |
           set -euo pipefail
           VERSION="${{ inputs.version || github.ref_name }}"
-          gh release create "$VERSION" --title "$VERSION" --generate-notes out/manifest.json out/assets/*
+          gh release create "$VERSION" --draft --title "$VERSION" --generate-notes
+          gh release upload "$VERSION" out/assets/*
+          gh release upload "$VERSION" out/manifest.json
+          gh release edit "$VERSION" --draft=false
