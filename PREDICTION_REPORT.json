@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "code": "zh_cn",
+  "method": "word-identity remap; retain original quantized scores; drop missing words",
+  "source": {
+    "clex_sha256": "34902b49bba68c46a4fd1f8de368b794a3e96368a58683d6de128323bc066e03",
+    "cngm_sha256": "4bc49f5f457697461c7d7b1f1744940cc74b4c03da87dd045f83c6bd9dfae555",
+    "word_count": 30000
+  },
+  "target": {
+    "clex_sha256": "f92c9dea009b80345854ad7cb331dff09802e42e28b0a94034a6f5645c9292d2",
+    "cngm_sha256": "88b362957aec4cd3e3d2031d751fc1c219ebbcd8fc1c80df0b385a0ce45697d1",
+    "word_count": 888485
+  },
+  "source_pairs": 40000,
+  "retained_pairs": 36659,
+  "dropped_pairs": 3341
+}
